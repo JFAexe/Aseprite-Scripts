@@ -77,7 +77,7 @@ local function createLayer( sprite, data )
     return layer
 end
 
-local function processButtonClick( func, data, win )
+local function processButtonClick( func, win )
     if not func then
         alert 'There is no function to run.'
 
@@ -86,7 +86,7 @@ local function processButtonClick( func, data, win )
 
     local time = os.clock( )
 
-    func( data )
+    func( win.data )
 
     if not win then
         return
@@ -98,7 +98,7 @@ local function processButtonClick( func, data, win )
     }
 end
 
-local function generateNormalFromCel( data, cel )
+local function generateNormalFromCel( cel, data )
     local image, clone, position = cel.image, cel.image:clone( ), cel.position
 
     local invertX, invertY, invertZ = data.invertX and -1 or 1, data.invertY and -1 or 1, data.invertZ and -1 or 1
@@ -185,7 +185,7 @@ local function generateNormalMap( data )
     local sprite = app.activeSprite
 
     app.transaction( function( )
-        local clone, position = generateNormalFromCel( data, cel )
+        local clone, position = generateNormalFromCel( cel, data )
 
         sprite:newCel( createLayer( sprite, data ), app.activeFrame, clone, position )
 
@@ -217,7 +217,7 @@ local function generateLayerNormalMap( data )
 
         for _, cel in ipairs( cels ) do
 
-            local clone, position = generateNormalFromCel( data, cel )
+            local clone, position = generateNormalFromCel( cel, data )
 
             sprite:newCel( layer, cel.frame, clone, position )
         end
@@ -258,7 +258,7 @@ local Window = Dialog( 'NMT' )
         text    = 'Generate for Cel',
         focus   = true,
         onclick = function( )
-            processButtonClick( generateNormalMap, Window.data, Window )
+            processButtonClick( generateNormalMap, Window )
         end
     }
     :newrow {
@@ -268,7 +268,7 @@ local Window = Dialog( 'NMT' )
         id      = 'layerNormalMap',
         text    = 'Generate for Layer',
         onclick = function( )
-            processButtonClick( generateLayerNormalMap, Window.data, Window )
+            processButtonClick( generateLayerNormalMap, Window )
         end
     }
     :show {
