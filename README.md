@@ -20,7 +20,7 @@ Script for generating normal maps.
 
 Script for generating Intravenous styled UI icons from sprites.
 
-Script will ignore all colors except `#64878c` (70, 84, 86) and `#465456` (100, 135, 140).
+Script will ignore all colors except selected in menu. First is base color, second is highlight color.
 
 ![](assets/ivuiit-example.png "Example")
 

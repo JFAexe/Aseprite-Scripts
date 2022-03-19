@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --       N A M E : Intravenous UI Icons Tool
 --   A U T H O R : Alexandr 'JFAexe' Konichenko
--- V E R S I O N : 2022.02.09.2
+-- V E R S I O N : 2022.03.19.3
 -------------------------------------------------------------------------------
 
 local app        = app
@@ -21,10 +21,10 @@ end
 
 
 -------------------------------------------------------------------------------
--- T Y P E S
+-- S H E M E S
 -------------------------------------------------------------------------------
 
-local types = {
+local __schemes = {
     idle = {
         name = '_idle',
         base = { r = 70,  g = 84,  b = 86  },
@@ -43,6 +43,17 @@ local types = {
         high = { r = 231, g = 116, b = 40  },
         fx   = true
     },
+    custom = {
+        name = '_custom',
+        base = { r = 0  , g = 0,   b = 0   },
+        high = { r = 255, g = 255, b = 255 },
+        fx   = true
+    },
+}
+
+local __colors = {
+    base = __schemes.idle.base,
+    high = __schemes.idle.high
 }
 
 
@@ -64,6 +75,10 @@ local function checkColor( value, color )
     return rgbaR( value ) == color.r and rgbaG( value ) == color.g and rgbaB( value ) == color.b
 end
 
+local function convertFromColor( color )
+    return { r = color.red, g = color.green, b = color.blue }
+end
+
 local function createLayer( sprite )
     local layer = nil
 
@@ -83,19 +98,19 @@ local function createSprite( sprite, name )
     return newSprite
 end
 
-local function applyColors( image, type )
+local function applyColors( image, scheme )
     local check = false
 
     for pixel in image:pixels( ) do
         local pixelValue = pixel( )
 
         if not checkTransparency( pixelValue ) then
-            if checkColor( pixelValue, types.idle.high ) then
-                pixel( rgba( type.high.r, type.high.g, type.high.b ) )
+            if checkColor( pixelValue, __colors.high ) then
+                pixel( rgba( scheme.high.r, scheme.high.g, scheme.high.b ) )
 
                 check = true
-            elseif checkColor( pixelValue, types.idle.base ) then
-                pixel( rgba( type.base.r, type.base.g, type.base.b ) )
+            elseif checkColor( pixelValue, __colors.base ) then
+                pixel( rgba( scheme.base.r, scheme.base.g, scheme.base.b ) )
 
                 check = true
             else
@@ -110,7 +125,7 @@ local function applyColors( image, type )
 end
 
 local function createBase( cel )
-    local altered, check = applyColors( cel.image:clone( ), types.idle )
+    local altered, check = applyColors( cel.image:clone( ), __colors )
 
     if not check then
         alert 'Wrong colors.'
@@ -121,18 +136,18 @@ local function createBase( cel )
     return altered
 end
 
-local function createAltered( sprite, cel, base, type )
-    if not type then
+local function createAltered( sprite, cel, base, scheme )
+    if not scheme then
         return
     end
 
-    local newSprite = createSprite( sprite, type.name )
+    local newSprite = createSprite( sprite, scheme.name )
 
-    local altered = applyColors( base:clone( ), type )
+    local altered = applyColors( base:clone( ), scheme )
 
     newSprite:newCel( app.activeLayer, app.activeFrame, altered, cel.position )
 
-    if not type.fx then
+    if not scheme.fx then
         command.AutocropSprite( )
 
         command.CanvasSize {
@@ -158,7 +173,7 @@ local function createAltered( sprite, cel, base, type )
     command.AutocropSprite( )
 end
 
-local function generateIcons( data )
+local function generateIcons( schemes )
     local cel = app.activeCel
 
     if not cel then
@@ -178,15 +193,15 @@ local function generateIcons( data )
     local base = createBase( cel )
 
     if base == nil then
+        alert 'Failed to process sprite.'
+
         return
     end
 
     app.transaction( function( )
-        createAltered( sprite, cel, base, data.typeIdle and types.idle )
-
-        createAltered( sprite, cel, base, data.typeActive and types.active )
-
-        createAltered( sprite, cel, base, data.typeInactive and types.inactive )
+        for scheme = 1, #schemes do
+            createAltered( sprite, cel, base, schemes[ scheme ] )
+        end
 
         app.refresh( )
     end )
@@ -200,26 +215,75 @@ end
 local Window = Dialog( 'IVUIIT' )
 
     Window
-    :separator {
-        text     = 'Type'
-    }
     :newrow {
         always   = true
     }
+    :separator {
+        text     = 'Colors'
+    }
+    :color {
+        id       = 'baseColor',
+        color    = Color( __colors.base )
+    }
+    :color {
+        id       = 'highColor',
+        color    = Color( __colors.high )
+    }
+    :separator {
+        text     = 'Schemes'
+    }
     :check {
-        id       = 'typeIdle',
+        id       = 'schemeIdle',
         text     = 'Idle',
         selected = true
     }
     :check {
-        id       = 'typeActive',
+        id       = 'schemeActive',
         text     = 'Active',
         selected = true
     }
     :check {
-        id       = 'typeInactive',
+        id       = 'schemeInactive',
         text     = 'Inactive',
         selected = true
+    }
+    :check {
+        id       = 'schemeCustom',
+        text     = 'Custom',
+        selected = false,
+        onclick  = function( )
+            local visible = Window.data.schemeCustom
+
+            Window
+            :modify {
+                id      = 'customBaseColor',
+                visible = visible
+            }
+            :modify {
+                id      = 'customHighColor',
+                visible = visible
+            }
+            :modify {
+                id      = 'customFx',
+                visible = visible
+            }
+        end
+    }
+    :color {
+        id       = 'customBaseColor',
+        color    = Color( __schemes.custom.base ),
+        visible  = false
+    }
+    :color {
+        id       = 'customHighColor',
+        color    = Color( __schemes.custom.high ),
+        visible  = false
+    }
+    :check {
+        id       = 'customFx',
+        text     = 'Glow',
+        selected = __schemes.custom.fx,
+        visible  = false
     }
     :button {
         id       = 'normalMap',
@@ -228,13 +292,25 @@ local Window = Dialog( 'IVUIIT' )
         onclick  = function( )
             local data = Window.data
 
-            if not ( data.typeIdle or data.typeActive or data.typeInactive ) then
+            if not ( data.schemeIdle or data.schemeActive or data.schemeInactive or data.schemeCustom ) then
                 alert 'Select at least one option.'
 
                 return
             end
 
-            generateIcons( data )
+            __colors.base = convertFromColor( data.baseColor )
+            __colors.high = convertFromColor( data.highColor )
+
+            __schemes.custom.base = convertFromColor( data.customBaseColor )
+            __schemes.custom.high = convertFromColor( data.customHighColor )
+            __schemes.custom.fx   = data.customFx
+
+            generateIcons( {
+                data.schemeIdle and __schemes.idle,
+                data.schemeActive and __schemes.active,
+                data.schemeInactive and __schemes.inactive,
+                data.schemeCustom and __schemes.custom,
+            } )
         end
     }
     :show {
