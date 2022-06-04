@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --       N A M E : Intravenous UI Icons Tool
 --   A U T H O R : Alexandr 'JFAexe' Konichenko
--- V E R S I O N : 2022.03.19.3
+-- V E R S I O N : 2022.06.04.4
 -------------------------------------------------------------------------------
 
 local app        = app
@@ -21,7 +21,7 @@ end
 
 
 -------------------------------------------------------------------------------
--- S H E M E S
+-- S C H E M E S
 -------------------------------------------------------------------------------
 
 local __schemes = {
@@ -133,6 +133,16 @@ local function createBase( cel )
         return nil
     end
 
+    command.AutocropSprite( )
+
+    command.CanvasSize {
+        ui     = false,
+        left   = 1,
+        right  = 1,
+        top    = 1,
+        bottom = 1,
+    }
+
     return altered
 end
 
@@ -148,16 +158,6 @@ local function createAltered( sprite, cel, base, scheme )
     newSprite:newCel( app.activeLayer, app.activeFrame, altered, cel.position )
 
     if not scheme.fx then
-        command.AutocropSprite( )
-
-        command.CanvasSize {
-            ui     = false,
-            left   = 1,
-            right  = 1,
-            top    = 1,
-            bottom = 1,
-        }
-
         return
     end
 
