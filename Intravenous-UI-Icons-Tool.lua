@@ -2,6 +2,7 @@
 --       N A M E : Intravenous UI Icons Tool
 --   A U T H O R : Alexandr 'JFAexe' Konichenko
 -- V E R S I O N : 2022.06.04.4
+-- L I C E N S E : MIT
 -------------------------------------------------------------------------------
 
 local app        = app

@@ -1,7 +1,8 @@
 -------------------------------------------------------------------------------
 --        N A M E : Normal Map Tool
 --    A U T H O R : Alexandr 'JFAexe' Konichenko, Martin Sandgren
---  V E R S I O N : 2022.02.09.5
+--  V E R S I O N : 2022.06.05.6
+--  L I C E N S E : MIT
 -- B A S E D  O N : https://github.com/carlmartus/aseprite_normalmap
 -------------------------------------------------------------------------------
 
@@ -98,7 +99,7 @@ local function processButtonClick( func, win )
     }
 end
 
-local function generateNormalFromCel( cel, data )
+local function normalMapFromCel( cel, data )
     local image, clone, position = cel.image, cel.image:clone( ), cel.position
 
     local invertX, invertY, invertZ = data.invertX and -1 or 1, data.invertY and -1 or 1, data.invertZ and -1 or 1
@@ -149,10 +150,10 @@ local function generateNormalFromCel( cel, data )
 
             local plane = { x = 0, y = 0, z = 0 }
 
-            for i = 1, #normals do
-                plane.x = plane.x + normals[ i ].x
-                plane.y = plane.y + normals[ i ].y
-                plane.z = plane.z + normals[ i ].z
+            for index = 1, #normals do
+                plane.x = plane.x + normals[ index ].x
+                plane.y = plane.y + normals[ index ].y
+                plane.z = plane.z + normals[ index ].z
             end
 
             plane   = normalize( plane )
@@ -167,7 +168,7 @@ local function generateNormalFromCel( cel, data )
     return clone, position
 end
 
-local function generateNormalMap( data )
+local function normalMap( data )
     local cel = app.activeCel
 
     if not cel then
@@ -185,7 +186,7 @@ local function generateNormalMap( data )
     local sprite = app.activeSprite
 
     app.transaction( function( )
-        local clone, position = generateNormalFromCel( cel, data )
+        local clone, position = normalMapFromCel( cel, data )
 
         sprite:newCel( createLayer( sprite, data ), app.activeFrame, clone, position )
 
@@ -193,7 +194,7 @@ local function generateNormalMap( data )
     end )
 end
 
-local function generateLayerNormalMap( data )
+local function layerNormalMap( data )
     local cels = app.activeLayer.cels
 
     local cel = cels[ 1 ]
@@ -216,8 +217,7 @@ local function generateLayerNormalMap( data )
         local layer = createLayer( sprite, data )
 
         for _, cel in ipairs( cels ) do
-
-            local clone, position = generateNormalFromCel( cel, data )
+            local clone, position = normalMapFromCel( cel, data )
 
             sprite:newCel( layer, cel.frame, clone, position )
         end
@@ -258,7 +258,7 @@ local Window = Dialog( 'NMT' )
         text    = 'Generate for Cel',
         focus   = true,
         onclick = function( )
-            processButtonClick( generateNormalMap, Window )
+            processButtonClick( normalMap, Window )
         end
     }
     :newrow {
@@ -268,7 +268,7 @@ local Window = Dialog( 'NMT' )
         id      = 'layerNormalMap',
         text    = 'Generate for Layer',
         onclick = function( )
-            processButtonClick( generateLayerNormalMap, Window )
+            processButtonClick( layerNormalMap, Window )
         end
     }
     :show {
